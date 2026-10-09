@@ -1,0 +1,168 @@
+[
+  {
+    "date": "2026-09-21",
+    "origin": "WUX",
+    "destination": "PKX",
+    "flight_number": "DEMO101",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true,
+    "scheduled_departure": "2026-09-21T08:30:00+08:00",
+    "scheduled_arrival": "2026-09-21T10:25:00+08:00"
+  },
+  {
+    "date": "2026-09-24",
+    "origin": "PKX",
+    "destination": "WUX",
+    "flight_number": "DEMO102",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2026-08-10",
+    "origin": "SHA",
+    "destination": "CTU",
+    "flight_number": "DEMO103",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A321",
+    "source": "虚构演示数据",
+    "is_demo": true,
+    "marked_duration_minutes": 175
+  },
+  {
+    "date": "2026-08-15",
+    "origin": "CTU",
+    "destination": "SHA",
+    "flight_number": "DEMO104",
+    "airline": "四川航空",
+    "aircraft": "Airbus A321",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2026-07-02",
+    "origin": "PVG",
+    "destination": "CAN",
+    "flight_number": "DEMO105",
+    "airline": "中国南方航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true,
+    "marked_duration_minutes": 140
+  },
+  {
+    "date": "2026-07-08",
+    "origin": "CAN",
+    "destination": "PVG",
+    "flight_number": "DEMO106",
+    "airline": "中国南方航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2026-06-12",
+    "origin": "WUX",
+    "destination": "XIY",
+    "flight_number": "DEMO107",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true,
+    "marked_duration_minutes": 130
+  },
+  {
+    "date": "2026-05-03",
+    "origin": "PVG",
+    "destination": "HKG",
+    "flight_number": "DEMO108",
+    "airline": "国泰航空",
+    "aircraft": "Airbus A330",
+    "source": "虚构演示数据",
+    "is_demo": true,
+    "marked_duration_minutes": 155
+  },
+  {
+    "date": "2026-04-20",
+    "origin": "SHA",
+    "destination": "SZX",
+    "flight_number": "DEMO109",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2026-03-01",
+    "origin": "SHA",
+    "destination": "CTU",
+    "flight_number": "DEMO110",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A321",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2025-12-01",
+    "origin": "WUX",
+    "destination": "PKX",
+    "flight_number": "DEMO111",
+    "airline": "中国东方航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2025-10-01",
+    "origin": "PVG",
+    "destination": "KMG",
+    "flight_number": "DEMO112",
+    "airline": "中国东方航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2025-08-01",
+    "origin": "WUX",
+    "destination": "XIY",
+    "flight_number": "DEMO113",
+    "airline": "深圳航空",
+    "aircraft": "Airbus A320",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2025-05-01",
+    "origin": "PEK",
+    "destination": "SHA",
+    "flight_number": "DEMO114",
+    "airline": "中国国际航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2022-06-01",
+    "origin": "HGH",
+    "destination": "SYX",
+    "flight_number": "DEMO115",
+    "airline": "海南航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true
+  },
+  {
+    "date": "2022-06-06",
+    "origin": "SYX",
+    "destination": "HGH",
+    "flight_number": "DEMO116",
+    "airline": "海南航空",
+    "aircraft": "Boeing 737-800",
+    "source": "虚构演示数据",
+    "is_demo": true
+  }
+]

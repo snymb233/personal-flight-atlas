@@ -1,0 +1,1 @@
+﻿date,origin,destination,flight_number,airline,aircraft,registration,icao24,scheduled_departure,scheduled_arrival,actual_departure,actual_arrival,departure_timezone,arrival_timezone,reported_distance_km,reported_duration_minutes,marked_duration_minutes,source,verification,notes,trip
