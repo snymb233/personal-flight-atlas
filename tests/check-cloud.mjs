@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {join,resolve,sep} from 'node:path';
+import {tmpdir} from 'node:os';
+import {handleApi} from '../worker/api.ts';
+import {utcTime,parseImport} from '../worker/flights.ts';
+import {scanCandidates} from '../src/scan.ts';
+
+const folder=mkdtempSync(join(tmpdir(),'flight-atlas-cloud-'));
+const sqlite=new DatabaseSync(join(folder,'isolated.sqlite3'));
+sqlite.exec(readFileSync(new URL('../migrations/0001_accounts.sql',import.meta.url),'utf8'));
+// D1-shaped adapter over real SQLite; tests execute every owner predicate against the schema.
+const DB={prepare(sql){let args=[];const query={bind(...values){args=values;return query;},async first(column){const row=sqlite.prepare(sql).get(...args);return column?row?.[column]??null:row??null;},async all(){return {success:true,results:sqlite.prepare(sql).all(...args)};},async run(){const meta=sqlite.prepare(sql).run(...args);return {success:true,results:[],meta:{changes:Number(meta.changes)}};}};return query;},async batch(queries){sqlite.exec('BEGIN');try{const rows=[];for(const q of queries)rows.push(await q.run());sqlite.exec('COMMIT');return rows;}catch(error){sqlite.exec('ROLLBACK');throw error;}}};
+const env={DB,AUTH_PEPPER:'isolated-native-test-pepper-not-a-real-secret'};
+const origin='https://atlas.example.test';
+async function request(path,{method='GET',body,session='',headers={}}={}){
+  return handleApi(new Request(origin+'/api'+path,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(session?{Cookie:session}:{}),...headers},body:body?JSON.stringify(body):undefined}),env);
+}
+const cookie=r=>r.headers.get('set-cookie').split(';')[0];
+try{
+  assert.equal((await request('/flights')).status,401);
+  assert.equal((await request('/auth/register',{method:'POST',body:{username:'unsafe',password:'short'}})).status,422);
+  const a=await request('/auth/register',{method:'POST',body:{username:'alice',display_name:'甲的档案',password:'Synthetic-Alice-Password-Only'}});
+  assert.equal(a.status,200);const sessionA=cookie(a);
+  assert.match(a.headers.get('set-cookie'),/HttpOnly/);assert.match(a.headers.get('set-cookie'),/Secure/);assert.match(a.headers.get('set-cookie'),/SameSite=Lax/);
+  const b=await request('/auth/register',{method:'POST',body:{username:'bob',password:'Synthetic-Bob-Password-Only'}});
+  assert.equal(b.status,200);const sessionB=cookie(b);
+  assert.equal((await request('/auth/register',{method:'POST',body:{username:'ALICE',password:'Synthetic-Another-Password'}})).status,409);
+  assert.equal((await request('/auth/login',{method:'POST',body:{username:'alice',password:'Synthetic-Wrong-Password'}})).status,401);
+  const me=await (await request('/auth/me',{session:sessionA})).json();assert.equal(me.user.username,'alice');assert.ok(!('password_hash' in me.user));
+  const f={date:'2026-10-01',origin:'WUX',destination:'PKX',flight_number:'MU2667',marked_duration_minutes:135,notes:'=HYPERLINK("https://example.com")'};
+  const create=await request('/flights',{session:sessionA,method:'POST',body:f});assert.equal(create.status,201);const flight=await create.json();
+  assert.equal(flight.flight_duration_minutes,135);assert.equal(flight.actual_duration_minutes,null);
+  assert.deepEqual(await (await request('/flights',{session:sessionB})).json(),[]);
+  for(const method of ['GET','PUT','DELETE'])assert.equal((await request('/flights/'+flight.id,{session:sessionB,method,body:method==='PUT'?f:undefined})).status,404);
+  assert.equal((await request('/flights',{session:sessionB,method:'POST',body:{...f,user_id:me.user.id}})).status,422);
+  assert.deepEqual((await (await request('/export.json',{session:sessionB})).json()).flights,[]);
+  assert.equal((await request('/flights',{session:sessionA,method:'POST',body:f,headers:{Origin:'https://evil.test'}})).status,403);
+  assert.equal((await request('/flights',{session:sessionA,headers:{'Sec-Fetch-Site':'cross-site'}})).status,403);
+  assert.equal((await request('/flights',{session:sessionA,method:'POST',body:{...f,date:'2026-02-30'}})).status,422);
+  assert.equal((await request('/flights',{session:sessionA,method:'POST',body:{...f,marked_duration_minutes:[123]}})).status,422);
+  assert.equal((await request('/flights',{session:sessionA,method:'POST',body:{...f,marked_duration_minutes:{toString:1,valueOf:2}}})).status,422);
+  const source=await (await request('/flights/'+flight.id,{session:sessionA})).json();assert.equal(source.sources.length,1);
+  const exportCsv=await (await request('/export.csv',{session:sessionA})).text();assert.ok(exportCsv.includes("'=HYPERLINK"));
+  const imp={filename:'test.json',content:JSON.stringify({flights:[f,{...f,date:'2026-10-02'},{...f,date:'2026-10-02'},{...f,date:'2026-02-30'}]})};
+  const preview=await (await request('/import/preview',{session:sessionA,method:'POST',body:imp})).json();assert.equal(preview.duplicates,2);assert.equal(preview.errors,1);
+  const commit=await (await request('/import/commit',{session:sessionA,method:'POST',body:imp})).json();assert.deepEqual([commit.created,commit.skipped,commit.errors.length],[1,2,1]);
+  const merge={filename:'test.json',strategy:'merge',content:JSON.stringify({flights:[{...f,aircraft:'Airbus A320',notes:'do not overwrite'}]})};
+  assert.equal((await (await request('/import/commit',{session:sessionA,method:'POST',body:merge})).json()).merged,1);
+  const merged=await (await request('/flights/'+flight.id,{session:sessionA})).json();assert.equal(merged.aircraft,'Airbus A320');assert.equal(merged.notes,f.notes);
+  const demo=await (await request('/demo')).json();assert.equal(demo.length,16);
+  assert.equal(parseImport('test.json',JSON.stringify([demo[0]]))[0].flight,null);
+  assert.equal(utcTime('2026-10-01T16:20','Asia/Shanghai'),'2026-10-01T08:20:00.000Z');
+  assert.throws(()=>utcTime('2026-03-08T02:30','America/New_York'));assert.throws(()=>utcTime('2026-11-01T01:30','America/New_York'));
+  const boarding=scanCandidates('登机牌\n2026-10-01\nMU2667\nWUX PKX\n登机时间 15:40\n起飞时间 16:20\n飞行时长 2小时15分钟')[0];
+  assert.deepEqual([boarding.date,boarding.origin,boarding.destination,boarding.flight_number,boarding.marked_duration_minutes],['2026-10-01','WUX','PKX','MU2667',135]);
+  assert.equal(scanCandidates('MU2667\n01 OCT\nWUX PKX\n登机时间15:40\n起飞时间16:20')[0].marked_duration_minutes,null);
+  const multi=scanCandidates('MU2667\n2026-10-01\nWUX PKX\n飞行时长2小时15分钟\nCA1234\n2026-10-02\nPKX WUX\n飞行时长2小时');
+  assert.deepEqual(multi.map(f=>[f.flight_number,f.date]),[['MU2667','2026-10-01'],['CA1234','2026-10-02']]);
+  assert.equal(scanCandidates('登 机 牌\n航班 日 期2026-10-01\nMU2667\n出 发 机 场 WUX\n到 达 机 场 PKX\n飞行 时 长 2 小 时 15 分 钟')[0].marked_duration_minutes,135);
+  const changed=await request('/auth/password',{session:sessionA,method:'POST',body:{current_password:'Synthetic-Alice-Password-Only',new_password:'Synthetic-Alice-New-Password'}});assert.equal(changed.status,200);
+  assert.equal((await request('/flights',{session:sessionA})).status,401);
+  const login=await request('/auth/login',{method:'POST',body:{username:'alice',password:'Synthetic-Alice-New-Password'}});assert.equal(login.status,200);
+  const fresh=cookie(login);assert.equal((await (await request('/flights',{session:fresh})).json()).length,2);
+  assert.equal((await request('/auth/logout',{session:fresh,method:'POST',body:{}})).status,200);
+  assert.equal((await request('/flights',{session:fresh})).status,401);
+  for(let i=0;i<20;i++)await request('/auth/login',{method:'POST',body:{username:'ratelimit',password:'Synthetic-Wrong-Password'}});
+  assert.equal((await request('/auth/login',{method:'POST',body:{username:'ratelimit',password:'Synthetic-Wrong-Password'}})).status,429);
+  assert.ok(!JSON.stringify(sqlite.prepare('SELECT * FROM users').all()).includes('Synthetic-Alice-Password-Only'));
+  console.log('PASS: registration/login, cookie flags, session revocation, owner isolation, source/export isolation, CSRF, validation, CSV safety, duplicate strategies, DST, demo isolation, OCR parser and login throttling.');
+}finally{sqlite.close();assert.ok(resolve(folder).startsWith(resolve(tmpdir())+sep+'flight-atlas-cloud-'));rmSync(folder,{recursive:true,force:true});}

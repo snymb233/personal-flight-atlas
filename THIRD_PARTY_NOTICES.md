@@ -9,3 +9,9 @@
 - 中国国界／轮廓与省界：支持[天地图官方行政区划可视化入口](https://cloudcenter.tianditu.gov.cn/administrativeDivision)导出的中国省级 GeoJSON，主办自然资源部、承办国家基础地理信息中心。官方标注“该数据仅供地图可视化使用”。原始及衍生 GeoJSON **不随仓库分发**，请使用者自行从官方入口获取、遵守使用条件并通过 `prepare_boundaries.py` 本地生成。该数据不属于本项目 MIT 许可。截图中的演示地图使用这一来源；官方网页预览审图号不作为本应用审图号。
 
 截图和演示航班均为虚构数据，不包含个人原始行程、登机牌或乘客信息。未复制航旅纵横的图标、商标或受保护界面素材。
+
+## v0.2 在线版
+
+- Papa Parse：MIT，用于 CSV 解析及防止导出公式执行。
+- Tesseract.js、Tesseract.js Core 和 Tesseract 语言数据：Apache-2.0，分别遵守各自包与模型的许可。Tesseract.js 完整许可见 `licenses/tesseract-js-Apache-2.0.txt`。模型从 `@tesseract.js-data` 的 `4.0.0_best_int` 版本取得，运行时全部由本站提供，不上传图片给外部 OCR 服务。
+- 中国境界 GeoJSON 不纳入 Git 和 MIT；在线站点使用已核验来源的数据进行地图可视化，保留来源标注。第三方数据不会因在线部署改用项目 MIT 许可。
