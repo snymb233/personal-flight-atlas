@@ -11,6 +11,12 @@ const airports={};
 for(const a of raw){const code=a.iata_code;if(!airports[code]||a.type==='large_airport')airports[code]={code,name:aliases[code]?.[1]||a.name,city:aliases[code]?.[0]||a.municipality||a.name,country:a.iso_country,continent:a.continent,latitude:Number(a.latitude_deg),longitude:Number(a.longitude_deg)};}
 await writeFile('worker/airports.json',JSON.stringify(airports));
 await writeFile('worker/ocr-airports.json',JSON.stringify({codes:Object.keys(airports),aliases:Object.values(airports).filter(a=>/[\u4e00-\u9fff]/.test(a.name)).map(({code,name,city})=>({code,name,city}))}));
+const flagCountries=JSON.parse(await readFile('node_modules/flag-icons/country.json','utf8'));
+const isoCodes=flagCountries.filter(c=>c.iso).map(c=>c.code.toUpperCase()).sort();
+if(isoCodes.length!==249)throw Error('ISO country/region list changed; review the coverage denominator.');
+await writeFile('data/country-codes.json',JSON.stringify(isoCodes)+'\n');
+await mkdir('public/flags',{recursive:true});
+for(const country of flagCountries)if(/^[a-z]{2}$/.test(country.code))await copyFile(join('node_modules/flag-icons',country.flag_1x1),`public/flags/${country.code}.svg`);
 await mkdir('public/ocr',{recursive:true});
 await copyFile('node_modules/tesseract.js/dist/worker.min.js','public/ocr/worker.min.js');
 for(const name of await readdir('node_modules/tesseract.js-core'))if(/\.wasm(?:\.js)?$/.test(name))await copyFile(join('node_modules/tesseract.js-core',name),join('public/ocr',name));

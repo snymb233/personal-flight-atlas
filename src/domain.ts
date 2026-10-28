@@ -1,4 +1,5 @@
 import { geoInterpolate } from 'd3-geo';
+import isoCodes from '../data/country-codes.json' with {type:'json'};
 
 export type Airport = {code: string; name: string; city: string; country: string; continent: string; latitude: number; longitude: number};
 export type Flight = {
@@ -21,6 +22,19 @@ export const labels: Record<string, string> = {
 export const fmt = (n: number) => new Intl.NumberFormat('zh-CN', {maximumFractionDigits:0}).format(n);
 export function duration(n: number | null) {if (n === null) return '待补充'; const m=Math.round(n); return `${Math.floor(m/60)} 小时 ${m%60} 分钟`;}
 export const routeKey = (f: Flight) => `${f.origin} → ${f.destination}`;
+export const airportLabel=(a:Airport,full=false)=>`${full?(a.name.includes(a.city)?a.name:`${a.city} · ${a.name}`):a.city}（${a.code}）`;
+export const routeLabel=(f:Flight)=>`${airportLabel(f.origin_airport)} → ${airportLabel(f.destination_airport)}`;
+const regionNames=new Intl.DisplayNames(['zh-CN'],{type:'region'});
+const regionOverrides:Record<string,string>={CN:'中国',HK:'中国香港',MO:'中国澳门',TW:'中国台湾'};
+export const countryName=(code:string)=>regionOverrides[code]||regionNames.of(code)||code;
+export function shareSummary(flights:Flight[]){
+  const s=summarize(flights,'all');
+  const countryCodes=[...new Set(s.airports.map(a=>a.country).filter(Boolean))].sort((a,b)=>a==='CN'?-1:b==='CN'?1:countryName(a).localeCompare(countryName(b),'zh-CN'));
+  const covered=countryCodes.filter(code=>isoCodes.includes(code)).length;
+  return {...s,countryCodes,coverage:covered/isoCodes.length*100,coverageTotal:isoCodes.length,
+    coverageText:countryCodes.length===1?`覆盖${countryName(countryCodes[0])}的 ${s.cities} 个城市`:`${countryCodes.length} 个国家／地区`,
+    coverageFootnote:`全球覆盖率按 ${isoCodes.length} 个 ISO 3166-1 国家／地区计算；到访按起降机场统计。`};
+}
 export function ranking(fs: Flight[], get: (f:Flight)=>string) {
   const counts = new Map<string, number>();
   for (const f of fs) {const k=get(f); if(k) counts.set(k,(counts.get(k)||0)+1);}

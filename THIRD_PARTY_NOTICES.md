@@ -10,6 +10,10 @@
 
 截图和演示航班均为虚构数据，不包含个人原始行程、登机牌或乘客信息。未复制航旅纵横的图标、商标或受保护界面素材。
 
+## v0.3 分享图
+
+- [flag-icons](https://github.com/lipis/flag-icons)：MIT，圆形旗帜由该包的 SVG 在浏览器内裁切；许可保留在 `licenses/flag-icons-MIT.txt`。ISO 国家／地区列表来自同版本包内的 `country.json`，覆盖率分母固定为 249。旗帜在构建时复制到本站，生成图片不依赖第三方图片服务。
+
 ## v0.2 在线版
 
 - Papa Parse：MIT，用于 CSV 解析及防止导出公式执行。

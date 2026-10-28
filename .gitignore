@@ -17,9 +17,11 @@ public/china-provinces.geojson
 data/*
 !data/airports.json
 !data/demo.json
+!data/country-codes.json
 .cloudflare/
 .wrangler/
 .dev.vars*
 public/ocr/
+public/flags/
 worker/airports.json
 worker/ocr-airports.json

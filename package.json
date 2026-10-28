@@ -1,6 +1,6 @@
 {
   "name": "personal-flight-atlas",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "check": "tsc --noEmit",
     "prebuild": "node scripts/prepare-cloud.mjs",
     "check:cloud": "tsc --project tsconfig.worker.json && node tests/check-cloud.mjs",
-    "deploy:cloud": "npm run build && npm run check:cloud && npx --yes wrangler@4.152.0 pages deploy dist --project-name personal-flight-atlas --branch main"
+    "deploy:cloud": "npm run build && npm run check:cloud && npx --yes wrangler@4.152.0 pages deploy dist --project-name personal-flight-atlas --branch main",
+    "check:world": "node tests/check-world.ts"
   },
   "dependencies": {
     "d3-geo": "3.1.1",
@@ -27,6 +28,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "flag-icons": "7.6.0",
     "typescript": "7.0.2",
     "vite": "8.3.3"
   }
